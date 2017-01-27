@@ -108,11 +108,13 @@ public class NetNinny {
 		
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		
-		//while((line = in.readLine()) != null){ // nah
-			//response = line+"\n";
-		//}
+		do{
+			line = in.readLine();
+			resp = line+"\n";
+			System.out.println(line);
+		}while(line != "");
 		
-		resp = in.readLine(); //debug
+		System.out.println("Got out");
 		
 		return resp;
 	}
