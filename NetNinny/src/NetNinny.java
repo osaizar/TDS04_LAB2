@@ -1,8 +1,7 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -20,13 +19,13 @@ public class NetNinny {
 	
 	private String response; 
 	private String toAddress;
-	private int toPort; //should be 80
+	private int toPort = 80; //should be 80
 	
 	public NetNinny(int port){
 		startServer(port);
 		for(;;){
 			getConn();
-			//sendRequest();
+			sendRequest();
 			//returnResponse();
 			// clearSockets();
 		}
@@ -38,16 +37,21 @@ public class NetNinny {
 		} catch (IOException e) {
 			System.out.println("[*] Can't connect to "+fromAddress);
 			e.printStackTrace();
-		}
-		
+		}	
 	}
+	
 	
 	public void sendRequest(){		
 		try {
+			toAddress = getServerHost();
 			serverConn = new Socket(toAddress, toPort);
-			
 			sendString(serverConn, request);
-			response = getString(serverConn);
+			
+			System.out.println("Getting response...");
+			
+			response = getStringServer(serverConn);
+			
+			System.out.println("Response: \n"+response);
 			
 		} catch (IOException e) {
 			System.out.println("[*] Can't connect to "+toAddress);
@@ -61,6 +65,19 @@ public class NetNinny {
 		}
 	}
 	
+	public String getServerHost(){
+		
+		String host = null;
+		String split[] = request.split("\n");
+		
+		for(int i = 0; i < split.length; i++){
+			if(split[i].toUpperCase().contains("HOST:")){
+				host = split[i].split(" ")[1];
+			}
+		}
+		
+		return host;
+	}	
 
 	public void getConnData() throws IOException{
 		
@@ -68,7 +85,7 @@ public class NetNinny {
 		fromAddress = clientConn.getRemoteSocketAddress().toString().split(":")[0].replaceAll("/", "");
 		fromPort = clientConn.getPort();
 		
-		System.out.println("[+] Got "+request+" from "+fromAddress+":"+fromPort); // debug
+		System.out.println("[+] Got: \n"+request+"from "+fromAddress+":"+fromPort); // debug
 	}
 	
 	public void getConn(){
@@ -93,30 +110,45 @@ public class NetNinny {
 	}
 	
 	public void sendString(Socket socket, String req) throws IOException{
-		BufferedWriter out;
 		
-		out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-		out.write(req);
-		out.close();
+		PrintWriter out;
+		
+		out = new PrintWriter(socket.getOutputStream(), true);
+		System.out.println("Sending:\n"+req);
+		out.println(req);
 	}
 	
 	public String getString(Socket socket) throws IOException{
 		
 		BufferedReader in;
-		String resp = null; 
+		String resp = ""; 
 		String line;
 		
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		
 		do{
 			line = in.readLine();
-			resp = line+"\n";
-			System.out.println(line);
-		}while(line != "");
-		
-		System.out.println("Got out");
+			resp += line+"\n";
+		}while(!line.isEmpty());
 		
 		return resp;
+	}
+	
+	public String getStringServer(Socket socket) throws IOException{
+		
+		BufferedReader in;
+		String resp = ""; 
+		String line;
+		
+		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		
+		do{
+			line = in.readLine();
+			resp += line+"\n";
+			System.out.println(line);
+		}while(true);
+		
+		//return resp;
 	}
 
 	public static void main(String[] args) {
