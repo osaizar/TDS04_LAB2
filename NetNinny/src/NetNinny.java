@@ -1,67 +1,89 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class NetNinny {
 	
+	final private static int PORT = 8080; // default port, we have to ask it in the arguments
+	
 	private ServerSocket listener;
-	private Socket socket;
-	private BufferedReader in;
+	private Socket clientConn;
+	private Socket serverConn;
 	
 	private String request;
 	private String fromAddress;
 	private int fromPort;
 	
-	public NetNinny(){
-		startServer();
+	private String response; 
+	private String toAddress;
+	private int toPort; //should be 80
+	
+	public NetNinny(int port){
+		startServer(port);
 		for(;;){
 			getConn();
-			sendRequest();
+			//sendRequest();
+			//returnResponse();
+			// clearSockets();
 		}
 	}
 	
-	public void sendRequest(){
-		
-	}
-	
-	
-	public void getConnData() throws IOException{
-		String line;
-		
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		
-		//while ((line = in.readLine()) != null){
-		//	request = line+"\n";
-		//}
-		
-		request = in.readLine();
-		fromAddress = socket.getRemoteSocketAddress().toString().split(":")[0].replaceAll("/", "");
-		fromPort = socket.getPort();
-		
-		System.out.println("[+] Got "+request+" from "+fromAddress+":"+fromPort); // debug
-	}
-	
-	public void getConn(){ // on this function we have to get the HTTP request and the data of the client
+	public void returnResponse(){
 		try {
-			socket = listener.accept();			
-			getConnData();
+			sendString(clientConn, response);
+		} catch (IOException e) {
+			System.out.println("[*] Can't connect to "+fromAddress);
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void sendRequest(){		
+		try {
+			serverConn = new Socket(toAddress, toPort);
+			
+			sendString(serverConn, request);
+			response = getString(serverConn);
 			
 		} catch (IOException e) {
-			System.out.println("[-] Connection error.");
-		} finally {
+			System.out.println("[*] Can't connect to "+toAddress);
+			e.printStackTrace();
+		} finally{
 			try {
-				socket.close();
+				serverConn.close();
 			} catch (IOException e) {
 				System.out.println("[-] Can't close socket.");
 			}
 		}
 	}
 	
-	public void startServer(){
+
+	public void getConnData() throws IOException{
+		
+		request = getString(clientConn);
+		fromAddress = clientConn.getRemoteSocketAddress().toString().split(":")[0].replaceAll("/", "");
+		fromPort = clientConn.getPort();
+		
+		System.out.println("[+] Got "+request+" from "+fromAddress+":"+fromPort); // debug
+	}
+	
+	public void getConn(){
 		try {
-			listener = new ServerSocket(8080);
+			clientConn = listener.accept();		
+			getConnData();
+			
+		} catch (IOException e) {
+			System.out.println("[-] Connection error.");
+		}
+	}
+	
+	public void startServer(int port){
+		try {
+			listener = new ServerSocket(port);
 			System.out.println("[*] Sockets initialized.");
 		} catch (IOException e) {
 			System.out.println("[-] Error at socket initialization.");
@@ -69,9 +91,34 @@ public class NetNinny {
 			System.exit(-1);
 		}
 	}
+	
+	public void sendString(Socket socket, String req) throws IOException{
+		BufferedWriter out;
+		
+		out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+		out.write(req);
+		out.close();
+	}
+	
+	public String getString(Socket socket) throws IOException{
+		
+		BufferedReader in;
+		String resp = null; 
+		String line;
+		
+		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		
+		//while((line = in.readLine()) != null){ // nah
+			//response = line+"\n";
+		//}
+		
+		resp = in.readLine(); //debug
+		
+		return resp;
+	}
 
 	public static void main(String[] args) {
-		new NetNinny();
+		new NetNinny(PORT);
 	}
 
 }
