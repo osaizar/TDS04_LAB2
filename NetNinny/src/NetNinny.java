@@ -9,6 +9,9 @@ public class NetNinny {
 	
 	final private static int PORT = 8080; // default port, we have to ask it in the arguments
 	
+	final private static String BADHOST = "www.ida.liu.se";
+	final private static String BADURL = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html";
+	
 	final private String[] BLACKLIST = {"http://www.ida.liu.se/~TDTS04/labs/2011/ass2/goodtest2.html"};
 	
 	private ServerSocket listener;
@@ -54,22 +57,16 @@ public class NetNinny {
 	
 	public void sendRequest(){		
 		try {
-			if(checkURL()){
-				toAddress = getServerHost();
-				serverConn = new Socket(toAddress, toPort);
-				sendString(serverConn, request);
+			toAddress = getServerHost();
+			serverConn = new Socket(toAddress, toPort);
+			sendString(serverConn, request);
 				
-				System.out.println("Getting response...");
+			System.out.println("Getting response...");
 				
-				response = getString(serverConn, true);
+			response = getString(serverConn, true);
 				
-				System.out.println("Response: \n"+response);
-				
-			}else{
-				System.out.println("BAD URL!");
-				System.exit(-1);
-				response = "";
-			}
+			System.out.println("Response: \n"+response);
+			
 		} catch (IOException e) {
 			System.out.println("[*] Can't connect to "+toAddress);
 			e.printStackTrace();
@@ -85,6 +82,7 @@ public class NetNinny {
 	
 	public boolean checkURL(){
 		
+		boolean redirect = false;
 		String url = null;
 		String split[] = request.split("\n");
 		
@@ -98,11 +96,14 @@ public class NetNinny {
 		System.out.println("URL:"+url);
 		
 		for(int i = 0; i < BLACKLIST.length; i++){
-			if(BLACKLIST[i] == url)return false;
+			if(BLACKLIST[i].equals(url))redirect = true;
 		}
 		
+		if (redirect){
+			request = request.replace(url, BADURL);
+		}
 		
-		return true;
+		return redirect;
 	}
 	
 	public String getServerHost(){
@@ -114,6 +115,11 @@ public class NetNinny {
 			if(split[i].toUpperCase().contains("HOST:")){
 				host = split[i].split(" ")[1];
 			}
+		}
+		
+		if(checkURL()){
+			request = request.replace(host, BADHOST);
+			host = BADHOST;
 		}
 		
 		return host;
