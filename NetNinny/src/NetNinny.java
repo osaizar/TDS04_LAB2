@@ -27,7 +27,16 @@ public class NetNinny {
 			getConn();
 			sendRequest();
 			returnResponse();
-			// clearSockets();
+			clearSockets();
+		}
+	}
+	
+	public void clearSockets(){
+		try {
+			clientConn.close();
+			serverConn.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -49,7 +58,7 @@ public class NetNinny {
 			
 			System.out.println("Getting response...");
 			
-			response = getStringServer(serverConn);
+			response = getString(serverConn, true);
 			
 			System.out.println("Response: \n"+response);
 			
@@ -81,11 +90,9 @@ public class NetNinny {
 
 	public void getConnData() throws IOException{
 		
-		request = getString(clientConn);
+		request = getString(clientConn, false);
 		fromAddress = clientConn.getRemoteSocketAddress().toString().split(":")[0].replaceAll("/", "");
 		fromPort = clientConn.getPort();
-		
-		System.out.println("[+] Got: \n"+request+"from "+fromAddress+":"+fromPort); // debug
 	}
 	
 	public void getConn(){
@@ -118,16 +125,18 @@ public class NetNinny {
 		out.println(req);
 	}
 	
-	public String getString(Socket socket) throws IOException{
+	public String getString(Socket socket, boolean isServer) throws IOException{
 		
 		BufferedReader in;
 		String resp = ""; 
-		String line = "";
+		String line = ".";
 		
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 		
 		while(true){
-			if (line == null)break;
+			if(line == null)break;
+			if (!isServer)if (line.isEmpty())break;
+			
 			line = in.readLine();
 			resp += line + "\n";
 		}
@@ -135,23 +144,7 @@ public class NetNinny {
 		return resp;
 	}
 	
-	public String getStringServer(Socket socket) throws IOException{
-		
-		BufferedReader in;
-		String resp = ""; 
-		String line;
-		
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		
-		do{
-			line = in.readLine();
-			resp += line+"\n";
-			System.out.println(line);
-		}while(line != null);
-		
-		return resp;
-	}
-
+	
 	public static void main(String[] args) {
 		new NetNinny(PORT);
 	}
