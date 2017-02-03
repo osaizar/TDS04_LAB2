@@ -9,6 +9,8 @@ public class NetNinny {
 	
 	final private static int PORT = 8080; // default port, we have to ask it in the arguments
 	
+	final private String[] BLACKLIST = {"http://www.ida.liu.se/~TDTS04/labs/2011/ass2/goodtest2.html"};
+	
 	private ServerSocket listener;
 	private Socket clientConn;
 	private Socket serverConn;
@@ -52,16 +54,22 @@ public class NetNinny {
 	
 	public void sendRequest(){		
 		try {
-			toAddress = getServerHost();
-			serverConn = new Socket(toAddress, toPort);
-			sendString(serverConn, request);
-			
-			System.out.println("Getting response...");
-			
-			response = getString(serverConn, true);
-			
-			System.out.println("Response: \n"+response);
-			
+			if(checkURL()){
+				toAddress = getServerHost();
+				serverConn = new Socket(toAddress, toPort);
+				sendString(serverConn, request);
+				
+				System.out.println("Getting response...");
+				
+				response = getString(serverConn, true);
+				
+				System.out.println("Response: \n"+response);
+				
+			}else{
+				System.out.println("BAD URL!");
+				System.exit(-1);
+				response = "";
+			}
 		} catch (IOException e) {
 			System.out.println("[*] Can't connect to "+toAddress);
 			e.printStackTrace();
@@ -72,6 +80,29 @@ public class NetNinny {
 				System.out.println("[-] Can't close socket.");
 			}
 		}
+	}
+	
+	
+	public boolean checkURL(){
+		
+		String url = null;
+		String split[] = request.split("\n");
+		
+		for(int i = 0; i < split.length; i++){
+			if(split[i].toUpperCase().contains("GET")){
+				url = split[i].split(" ")[1];
+				break;
+			}
+		}
+		
+		System.out.println("URL:"+url);
+		
+		for(int i = 0; i < BLACKLIST.length; i++){
+			if(BLACKLIST[i] == url)return false;
+		}
+		
+		
+		return true;
 	}
 	
 	public String getServerHost(){
