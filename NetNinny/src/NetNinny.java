@@ -26,7 +26,7 @@ public class NetNinny {
 		for(;;){
 			getConn();
 			sendRequest();
-			//returnResponse();
+			returnResponse();
 			// clearSockets();
 		}
 	}
@@ -122,14 +122,15 @@ public class NetNinny {
 		
 		BufferedReader in;
 		String resp = ""; 
-		String line;
+		String line = "";
 		
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		
-		do{
+		while(true){
+			if (line == null)break;
 			line = in.readLine();
-			resp += line+"\n";
-		}while(!line.isEmpty());
+			resp += line + "\n";
+		}
 		
 		return resp;
 	}
@@ -146,9 +147,9 @@ public class NetNinny {
 			line = in.readLine();
 			resp += line+"\n";
 			System.out.println(line);
-		}while(true);
+		}while(line != null);
 		
-		//return resp;
+		return resp;
 	}
 
 	public static void main(String[] args) {
