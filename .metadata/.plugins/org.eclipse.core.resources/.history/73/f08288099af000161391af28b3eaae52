@@ -48,6 +48,7 @@ public class NetThread extends Thread {
 			this.toClient = sClient.getOutputStream();
 		}catch(IOException e){
 			System.out.println("[-] ("+this.getName()+") Error connecting to client");
+			e.printStackTrace();
 		}
 		
 
@@ -70,6 +71,7 @@ public class NetThread extends Thread {
 			System.out.println("[+] ("+this.getName()+") Response sent to client");
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't send response");
+			e.printStackTrace();
 		}
 	}
 	
@@ -82,17 +84,19 @@ public class NetThread extends Thread {
 			System.out.println("[+] ("+this.getName()+") Request sent to the server "+sServer.getRemoteSocketAddress());
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't send request");
+			e.printStackTrace();
 		}
 		
 		try {
 			while ((bytes = fromServer.read(response)) != -1){
 				sResponse = new String(response, StandardCharsets.UTF_8);
-				if (debug) System.out.println(sResponse);
+				//System.out.println(sResponse); // debug
 				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress());
 				break;
 			}
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't get response");
+			e.printStackTrace();
 		}
 	}
 
@@ -103,7 +107,7 @@ public class NetThread extends Thread {
 		try{
 			while ((bytes = fromClient.read(request)) != -1){
 				sRequest = new String(request, StandardCharsets.UTF_8);
-				if (debug) System.out.println(sRequest); // debug
+				//System.out.println(sRequest); // debug
 				System.out.println("[+] ("+this.getName()+") Got request from client");
 				break;
 			}
@@ -112,6 +116,7 @@ public class NetThread extends Thread {
 			
 		}catch(IOException e){
 			System.out.println("[-] ("+this.getName()+") Error getting the response");
+			e.printStackTrace();
 		}
 	}
 	
@@ -134,6 +139,7 @@ public class NetThread extends Thread {
 			toServer = sServer.getOutputStream();
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't connect to "+serverHost);
+			e.printStackTrace();
 		}
 		
 	}

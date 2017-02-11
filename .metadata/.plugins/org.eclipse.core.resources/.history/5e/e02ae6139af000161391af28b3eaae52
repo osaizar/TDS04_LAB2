@@ -103,7 +103,7 @@ public class NetThread extends Thread {
 		try{
 			while ((bytes = fromClient.read(request)) != -1){
 				sRequest = new String(request, StandardCharsets.UTF_8);
-				if (debug) System.out.println(sRequest); // debug
+				if (debug)System.out.println(sRequest); // debug
 				System.out.println("[+] ("+this.getName()+") Got request from client");
 				break;
 			}

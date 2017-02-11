@@ -7,17 +7,16 @@ public class NetNinny2{
 
 	final private static int PORT = 8080; //default port, you can change it with args
 
-	public NetNinny2(int port, boolean debug){
+	public NetNinny2(int port){
 
 		ServerSocket server;
 		
 		System.out.println("[+] Listening to "+port);
-		if (debug)System.out.println("[+] Debug mode active, showing all");
 		
 		try {
 			server = new ServerSocket(port);
 			while (true){
-				new NetThread(server.accept(), debug);
+				new NetThread(server.accept());
 			}
 			
 		} catch (IOException e) {
@@ -27,19 +26,25 @@ public class NetNinny2{
 
 
 	public static void main(String[] args){
+		System.setProperty("java.net.preferIPv4Stack" , "true"); //disable ipv6
 		int port = PORT;
-		boolean debug = false;
 		
 		for (int i = 0; i < args.length; i++){
 			if(args[i].equals("-p")){ //custom port
 				port = Integer.parseInt(args[i+1]);
 				i++;
 			}else if(args[i].equals("-d")){ //debug
-				debug = true;
+				
 			}
 		}
 
-		new NetNinny2(port, debug);
+		if(args.length > 1){
+			if(args[0].equals("-p")){
+				port = Integer.parseInt(args[1]);
+			}
+		}
+
+		new NetNinny2(port);
 	}
 
 }

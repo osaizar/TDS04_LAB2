@@ -87,7 +87,7 @@ public class NetThread extends Thread {
 		try {
 			while ((bytes = fromServer.read(response)) != -1){
 				sResponse = new String(response, StandardCharsets.UTF_8);
-				if (debug) System.out.println(sResponse);
+				if (debug)System.out.println(sResponse); // debug
 				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress());
 				break;
 			}
@@ -103,7 +103,7 @@ public class NetThread extends Thread {
 		try{
 			while ((bytes = fromClient.read(request)) != -1){
 				sRequest = new String(request, StandardCharsets.UTF_8);
-				if (debug) System.out.println(sRequest); // debug
+				//System.out.println(sRequest); // debug
 				System.out.println("[+] ("+this.getName()+") Got request from client");
 				break;
 			}

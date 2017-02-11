@@ -12,7 +12,6 @@ public class NetNinny2{
 		ServerSocket server;
 		
 		System.out.println("[+] Listening to "+port);
-		if (debug)System.out.println("[+] Debug mode active, showing all");
 		
 		try {
 			server = new ServerSocket(port);
@@ -27,6 +26,7 @@ public class NetNinny2{
 
 
 	public static void main(String[] args){
+		System.setProperty("java.net.preferIPv4Stack" , "true"); //disable ipv6
 		int port = PORT;
 		boolean debug = false;
 		
@@ -36,6 +36,12 @@ public class NetNinny2{
 				i++;
 			}else if(args[i].equals("-d")){ //debug
 				debug = true;
+			}
+		}
+
+		if(args.length > 1){
+			if(args[0].equals("-p")){
+				port = Integer.parseInt(args[1]);
 			}
 		}
 
