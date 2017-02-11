@@ -33,7 +33,7 @@ public class NetThread extends Thread {
 
 
 	public NetThread(Socket sClient){
-
+		System.setProperty("java.net.preferIPv4Stack" , "true"); //disable ipv6
 		request = new byte[RQ_BUFFER];
 		response = new byte[RP_BUFFER];
 
@@ -44,7 +44,7 @@ public class NetThread extends Thread {
 			this.fromClient = sClient.getInputStream();
 			this.toClient = sClient.getOutputStream();
 		}catch(IOException e){
-			System.out.println("[-] Error connecting to client");
+			System.out.println("[-] ("+this.getName()+") Error connecting to client");
 			e.printStackTrace();
 		}
 		
@@ -55,17 +55,19 @@ public class NetThread extends Thread {
 
 	@Override
 	public void run(){
-		System.out.println("[+] New connection from "+sClient.getRemoteSocketAddress());
+		System.out.println("[+] ("+this.getName()+") New connection from "+sClient.getRemoteSocketAddress());
 		getRequest();
 		sendToServer();
 		sendToClient();
+		return;
 	}
 	
 	private void sendToClient(){
 		try {
 			toClient.write(response, 0, bytes);
+			System.out.println("[+] ("+this.getName()+") Response sent to client");
 		} catch (IOException e) {
-			System.out.println("[-] Couldn't send response");
+			System.out.println("[-] ("+this.getName()+") Couldn't send response");
 			e.printStackTrace();
 		}
 	}
@@ -76,19 +78,21 @@ public class NetThread extends Thread {
 		
 		try {
 			toServer.write(request, 0, bytes);
+			System.out.println("[+] ("+this.getName()+") Request sent to the server "+sServer.getRemoteSocketAddress());
 		} catch (IOException e) {
-			System.out.println("[-] Couldn't send request");
+			System.out.println("[-] ("+this.getName()+") Couldn't send request");
 			e.printStackTrace();
 		}
 		
 		try {
 			while ((bytes = fromServer.read(response)) != -1){
 				sResponse = new String(response, StandardCharsets.UTF_8);
-				System.out.println(sResponse); // debug
+				//System.out.println(sResponse); // debug
+				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress());
 				break;
 			}
 		} catch (IOException e) {
-			System.out.println("[-] Couldn't get response");
+			System.out.println("[-] ("+this.getName()+") Couldn't get response");
 			e.printStackTrace();
 		}
 	}
@@ -100,14 +104,15 @@ public class NetThread extends Thread {
 		try{
 			while ((bytes = fromClient.read(request)) != -1){
 				sRequest = new String(request, StandardCharsets.UTF_8);
-				System.out.println(sRequest); // debug
+				//System.out.println(sRequest); // debug
+				System.out.println("[+] ("+this.getName()+") Got request from client");
 				break;
 			}
 			
 			getServerConn(sRequest);
 			
 		}catch(IOException e){
-			System.out.println("[-] Error getting the response");
+			System.out.println("[-] ("+this.getName()+") Error getting the response");
 			e.printStackTrace();
 		}
 	}
@@ -116,23 +121,21 @@ public class NetThread extends Thread {
 		if (sRequest == null)return;
 		
 		String serverHost = null;
-		String split[] = sRequest.split("\n");
+		String split[] = sRequest.split("\r\n");
 		
 		for(int i = 0; i < split.length; i++){
-			if(split[i].toUpperCase().contains("HOST:")){
+			if(split[i].toUpperCase().contains("HOS")){
 				serverHost = split[i].split(" ")[1];
 				break;
 			}
 		}
 		
 		try {
-			sServer = new Socket(serverHost, SERVER_PORT); //couldn't connect!
+			sServer = new Socket(serverHost, SERVER_PORT);
 			fromServer = sServer.getInputStream();
 			toServer = sServer.getOutputStream();
-			
-			System.out.println("[+] Connected to "+serverHost);
 		} catch (IOException e) {
-			System.out.println("[-] Couldn't connect to "+serverHost);
+			System.out.println("[-] ("+this.getName()+") Couldn't connect to "+serverHost);
 			e.printStackTrace();
 		}
 		
