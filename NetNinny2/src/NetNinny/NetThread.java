@@ -4,19 +4,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class NetThread extends Thread {
+	
+	final private static String[] URL_BLIST = {"http://www.ida.liu.se/~TDTS04/labs/2011/ass2/SpongeBob.html"};
+	final private static String[] CONTENT_BLIST = {"spongebob"};
+	
+	final private static String R_HOST = "www.ida.liu.se";
+	final private static String R_URL = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html";
+	final private static String R_CONTENT = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html";
+	
 
-	final private static int RQ_BUFFER = 1024;
-	final private static int RP_BUFFER = 4096;
+	final private static int RQ_BUFFER = 10240;
+	final private static int RP_BUFFER = 40960;
 	
 	private boolean debug;
 
 	private byte[] request;
 	private byte[] response;
 	
-	private int bytes;
+	private int reqBytes;
+	private int respBytes;
 
 	//Client
 	private Socket sClient;
@@ -31,6 +41,9 @@ public class NetThread extends Thread {
 	
 	private InputStream fromServer;
 	private OutputStream toServer;
+	
+	private String url;
+	private String serverHost;
 
 
 
@@ -61,12 +74,13 @@ public class NetThread extends Thread {
 		getRequest();
 		sendToServer();
 		sendToClient();
+		System.out.println("[+] ("+this.getName()+") Exiting...");
 		return;
 	}
 	
 	private void sendToClient(){
 		try {
-			toClient.write(response, 0, bytes);
+			toClient.write(response, 0, respBytes);
 			System.out.println("[+] ("+this.getName()+") Response sent to client");
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't send response");
@@ -78,22 +92,43 @@ public class NetThread extends Thread {
 		String sResponse = null;
 		
 		try {
-			toServer.write(request, 0, bytes);
+			toServer.write(request, 0, reqBytes);
 			System.out.println("[+] ("+this.getName()+") Request sent to the server "+sServer.getRemoteSocketAddress());
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't send request");
 		}
 		
 		try {
-			while ((bytes = fromServer.read(response)) != -1){
+			while ((respBytes = fromServer.read(response)) != -1){
 				sResponse = new String(response, StandardCharsets.UTF_8);
 				if (debug) System.out.println(sResponse);
 				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress());
 				break;
 			}
+			
+			if (!checkResponse(sResponse)){
+				// redirect  to error page
+			}
+			
+			
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't get response");
 		}
+	}
+	
+	private boolean checkResponse(String sResponse){
+		
+		String[] lines = sResponse.split(" ");		
+
+		
+		for (int i = 0; i < lines.length; i++ ){
+			for (int j = 0; j < CONTENT_BLIST.length; j++){
+				if (lines[i].toUpperCase().equals(CONTENT_BLIST[j].toUpperCase()))
+					return false;
+			}
+		}
+		
+		return true;
 	}
 
 	private void getRequest(){
@@ -101,11 +136,18 @@ public class NetThread extends Thread {
 		String sRequest = null;
 
 		try{
-			while ((bytes = fromClient.read(request)) != -1){
+			while ((reqBytes = fromClient.read(request)) != -1){
 				sRequest = new String(request, StandardCharsets.UTF_8);
 				if (debug) System.out.println(sRequest); // debug
 				System.out.println("[+] ("+this.getName()+") Got request from client");
 				break;
+			}
+			
+			getServerHost(sRequest);
+			
+			if(!checkURL(sRequest)){
+				System.out.println("[+] Bad URL detected!");
+				redirectToURLError(sRequest);
 			}
 			
 			getServerConn(sRequest);
@@ -115,19 +157,52 @@ public class NetThread extends Thread {
 		}
 	}
 	
-	private void getServerConn(String sRequest){
-		if (sRequest == null)return;
-		
-		String serverHost = null;
+	private void getServerHost(String sRequest){
 		String split[] = sRequest.split("\r\n");
 		
 		for(int i = 0; i < split.length; i++){
-			if(split[i].toUpperCase().contains("HOS")){
+			if(split[i].toUpperCase().contains("HOST")){
 				serverHost = split[i].split(" ")[1];
 				break;
 			}
 		}
+	}
+	
+	private void redirectToURLError(String sRequest){
+				
+		System.out.println("URL "+url+" HOSTNAME "+serverHost);
+		sRequest = sRequest.replace(serverHost, R_HOST);
+		serverHost = R_HOST;
 		
+		sRequest = sRequest.replaceAll(url, R_URL);
+		request = sRequest.getBytes(Charset.forName("UTF-8"));
+	}
+	
+	private boolean checkURL(String sRequest){
+		
+		String[] lines = sRequest.split("\r\n");
+		
+		for (int i = 0; i < lines.length; i++){
+			if(lines[i].toUpperCase().contains("GET")){
+				url = lines[i].split(" ")[1];
+				break;
+			}
+		}
+		
+		if(url != null){
+			for (int i = 0; i < URL_BLIST.length; i++ ){
+				if (url.equals(URL_BLIST[i])){
+					return false;
+				}
+			}
+			return true;
+		}
+		return true;
+	}
+	
+	private void getServerConn(String sRequest){
+		if (sRequest == null)return;
+				
 		try {
 			sServer = new Socket(serverHost, SERVER_PORT);
 			fromServer = sServer.getInputStream();
