@@ -1,24 +1,21 @@
 package NetNinny;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 
 public class NetNinny2{
 
 	final private static int PORT = 8080; //default port, you can change it with args
 
-	public NetNinny2(int port, String ip, boolean debug){
+	public NetNinny2(int port, boolean debug){
 
 		ServerSocket server;
-		InetAddress addr;
 
-		System.out.println("[+] Listening to "+ip+":"+port);
+		System.out.println("[+] Listening to "+port);
 		if (debug)System.out.println("[+] Debug mode active, showing all");
 
 		try {
-			addr = InetAddress.getByName(ip);
-			server = new ServerSocket(port, 50, addr);
+			server = new ServerSocket(port);
 			while (true){
 				new NetThread(server.accept(), debug);
 			}
@@ -40,13 +37,13 @@ public class NetNinny2{
 				i++;
 			}else if(args[i].equals("-d")){ //debug
 				debug = true;
-			}else if(args[i].equals("-i")){ //ip
+			}else if(args[i].equals("-p")){ //ip
 				ip = args[i+1];
 				i++;
 			}
 		}
 
-		new NetNinny2(port, ip, debug);
+		new NetNinny2(port, debug);
 	}
 
 }

@@ -14,7 +14,7 @@ public class NetThread extends Thread {
 	
 	final private static String R_HOST = "www.ida.liu.se";
 	final private static String R_URL = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html";
-	//final private static String R_CONTENT = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html";
+	final private static String R_CONTENT = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html";
 	
 
 	final private static int RQ_BUFFER = 10240;

@@ -1,7 +1,6 @@
 package NetNinny;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 
 public class NetNinny2{
@@ -13,12 +12,11 @@ public class NetNinny2{
 		ServerSocket server;
 		InetAddress addr;
 
-		System.out.println("[+] Listening to "+ip+":"+port);
+		System.out.println("[+] Listening to "+port);
 		if (debug)System.out.println("[+] Debug mode active, showing all");
 
 		try {
-			addr = InetAddress.getByName(ip);
-			server = new ServerSocket(port, 50, addr);
+			server = new ServerSocket(port);
 			while (true){
 				new NetThread(server.accept(), debug);
 			}
@@ -40,7 +38,7 @@ public class NetNinny2{
 				i++;
 			}else if(args[i].equals("-d")){ //debug
 				debug = true;
-			}else if(args[i].equals("-i")){ //ip
+			}else if(args[i].equals("-p")){ //ip
 				ip = args[i+1];
 				i++;
 			}
