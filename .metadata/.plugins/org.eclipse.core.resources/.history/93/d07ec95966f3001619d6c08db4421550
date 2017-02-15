@@ -71,10 +71,9 @@ public class NetThread extends Thread {
 	@Override
 	public void run(){
 		System.out.println("[+] ("+this.getName()+") New connection from "+sClient.getRemoteSocketAddress());
-		if (getRequest()){
-			sendToServer();
-			sendToClient();
-		}
+		getRequest();
+		sendToServer();
+		sendToClient();
 		System.out.println("[+] ("+this.getName()+") Exiting...");
 		return;
 	}
@@ -102,12 +101,8 @@ public class NetThread extends Thread {
 		try {
 			while ((respBytes = fromServer.read(response)) != -1){
 				sResponse = new String(response, StandardCharsets.UTF_8);
+				if (debug) System.out.println(sResponse);
 				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress());
-				if (debug) {
-					System.out.println("[+] ("+this.getName()+") RESPONSE:");
-					System.out.println(sResponse);
-					System.out.println("[+] ("+this.getName()+") END RESPONSE");
-				}
 				break;
 			}
 			
@@ -136,23 +131,17 @@ public class NetThread extends Thread {
 		return true;
 	}
 
-	private boolean getRequest(){
+	private void getRequest(){
 
 		String sRequest = null;
 
 		try{
 			while ((reqBytes = fromClient.read(request)) != -1){
 				sRequest = new String(request, StandardCharsets.UTF_8);
+				if (debug) System.out.println(sRequest); // debug
 				System.out.println("[+] ("+this.getName()+") Got request from client");
-				if (debug){
-					System.out.println("[+] ("+this.getName()+") REQUEST:");
-					System.out.println(sRequest);
-					System.out.println("[+] ("+this.getName()+") END REQUEST");
-				}
 				break;
 			}
-			
-			if (sRequest == null) return false;
 			
 			getServerHost(sRequest);
 			
@@ -163,11 +152,8 @@ public class NetThread extends Thread {
 			
 			getServerConn(sRequest);
 			
-			return true;
-			
 		}catch(IOException e){
 			System.out.println("[-] ("+this.getName()+") Error getting the response");
-			return false;
 		}
 	}
 	

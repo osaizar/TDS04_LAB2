@@ -71,10 +71,9 @@ public class NetThread extends Thread {
 	@Override
 	public void run(){
 		System.out.println("[+] ("+this.getName()+") New connection from "+sClient.getRemoteSocketAddress());
-		if (getRequest()){
-			sendToServer();
-			sendToClient();
-		}
+		getRequest();
+		sendToServer();
+		sendToClient();
 		System.out.println("[+] ("+this.getName()+") Exiting...");
 		return;
 	}

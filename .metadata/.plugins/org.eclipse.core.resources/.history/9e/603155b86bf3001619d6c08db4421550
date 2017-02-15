@@ -104,9 +104,9 @@ public class NetThread extends Thread {
 				sResponse = new String(response, StandardCharsets.UTF_8);
 				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress());
 				if (debug) {
-					System.out.println("[+] ("+this.getName()+") RESPONSE:");
-					System.out.println(sResponse);
-					System.out.println("[+] ("+this.getName()+") END RESPONSE");
+					//System.out.println("[+] ("+this.getName()+") RESPONSE:");
+					//System.out.println(sResponse);
+					//System.out.println("[+] ("+this.getName()+") END RESPONSE");
 				}
 				break;
 			}
