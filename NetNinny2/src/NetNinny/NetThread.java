@@ -17,16 +17,16 @@ public class NetThread extends Thread {
 	//final private static String R_CONTENT = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html";
 	
 
-	final private static int RQ_BUFFER = 10240;
-	final private static int RP_BUFFER = 40960;
+	final private static int RQ_BUFFER = 1024000;
+	final private static int RP_BUFFER = 4096000;
 	
 	private boolean debug;
 
 	private byte[] request;
 	private byte[] response;
 	
-	private int reqBytes;
-	private int respBytes;
+	private int reqBytes = 0;
+	private int respBytes = 0;
 
 	//Client
 	private Socket sClient;
@@ -82,6 +82,7 @@ public class NetThread extends Thread {
 	private void sendToClient(){
 		try {
 			toClient.write(response, 0, respBytes);
+			respBytes = 0;
 			System.out.println("[+] ("+this.getName()+") Response sent to client");
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't send response");
@@ -91,24 +92,28 @@ public class NetThread extends Thread {
 	private void sendToServer(){
 		
 		String sResponse = null;
+		int respSize = 0;
+		byte[] tmpresponse = new byte[RP_BUFFER];
 		
 		try {
 			toServer.write(request, 0, reqBytes);
+			reqBytes = 0;
 			System.out.println("[+] ("+this.getName()+") Request sent to the server "+sServer.getRemoteSocketAddress());
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't send request");
 		}
 		
 		try {
-			while ((respBytes = fromServer.read(response)) != -1){
-				sResponse = new String(response, StandardCharsets.UTF_8);
-				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress());
+			while ((respSize = fromServer.read(tmpresponse)) != -1){
+				response = sumArrays(response, tmpresponse, respBytes, respSize);
+				respBytes += respSize;
+				sResponse = new String(tmpresponse, StandardCharsets.UTF_8);
+				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress()+" (size: "+respBytes+")");
 				if (debug) {
 					System.out.println("[+] ("+this.getName()+") RESPONSE:");
 					System.out.println(sResponse);
 					System.out.println("[+] ("+this.getName()+") END RESPONSE");
 				}
-				break;
 			}
 			
 			if (!checkResponse(sResponse)){
@@ -119,6 +124,20 @@ public class NetThread extends Thread {
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't get response");
 		}
+	}
+	
+	private byte[] sumArrays(byte[] arr1, byte[] arr2, int size1, int size2){
+		byte[] rt = new byte[RP_BUFFER];
+		
+		for(int i = 0; i < size1; i ++){
+			rt[i] = arr1[i];
+		}
+		
+		for(int i = 0; i < size2; i++){
+			rt[i+size1] = arr2[i];
+		}
+		
+		return rt;
 	}
 	
 	private boolean checkResponse(String sResponse){
@@ -143,7 +162,7 @@ public class NetThread extends Thread {
 		try{
 			while ((reqBytes = fromClient.read(request)) != -1){
 				sRequest = new String(request, StandardCharsets.UTF_8);
-				System.out.println("[+] ("+this.getName()+") Got request from client");
+				System.out.println("[+] ("+this.getName()+") Got request from client (size: "+reqBytes+")");
 				if (debug){
 					System.out.println("[+] ("+this.getName()+") REQUEST:");
 					System.out.println(sRequest);
