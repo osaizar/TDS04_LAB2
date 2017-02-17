@@ -138,17 +138,13 @@ public class NetThread extends Thread {
 	
 	private boolean checkResponse(String sResponse){
 		
-		String[] lines = sResponse.split("\n");
-		String[] words;
+		String[] lines = sResponse.split("\n");		
 
 		
 		for (int i = 0; i < lines.length; i++ ){
-			words = lines[i].split(" ");
-			for (int k = 0; k < words.length; k++){
-				for (int j = 0; j < CONTENT_BLIST.length; j++){
-					if (words[k].toUpperCase().equals(CONTENT_BLIST[j].toUpperCase()))
-						return false;
-				}
+			for (int j = 0; j < CONTENT_BLIST.length; j++){
+				if (lines[i].toUpperCase().equals(CONTENT_BLIST[j].toUpperCase()))
+					return false;
 			}
 		}
 		
