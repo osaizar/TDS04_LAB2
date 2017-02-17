@@ -16,7 +16,7 @@ public class NetThread extends Thread {
 	final private static String R_URL = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html";
 	final private static String R_CONTENT = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html";
 	
-	final private static String R_CONTENT_RESPONSE = "HTTP/1.1 302 Found\r\nLocation: "+R_CONTENT;
+	final private static String R_CONTENT_RESPONSE = "HTTP/1.1 302 Found\r\n Location: "+R_CONTENT;
 	
 
 	final private static int RQ_BUFFER = 10240;

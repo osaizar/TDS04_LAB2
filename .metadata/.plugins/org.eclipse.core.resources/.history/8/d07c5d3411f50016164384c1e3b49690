@@ -121,8 +121,6 @@ public class NetThread extends Thread {
 			if (!checkResponse(sResponse)){
 				// redirect  to error page
 				System.out.println("Bad CONTENT!");
-				response = R_CONTENT_RESPONSE.getBytes();
-				respBytes = response.length;
 			}
 			
 			
