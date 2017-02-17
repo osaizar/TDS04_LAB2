@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 public class NetThread extends Thread {
 	
 	final private static String[] URL_BLIST = {"http://www.ida.liu.se/~TDTS04/labs/2011/ass2/SpongeBob.html"};
-	final private static String[] CONTENT_BLIST = {"spongebob"};
+	final private static String[] CONTENT_BLIST = {"spongebob", "sorry,"};
 	
 	final private static String R_HOST = "www.ida.liu.se";
 	final private static String R_URL = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html";
@@ -20,7 +20,7 @@ public class NetThread extends Thread {
 	
 
 	final private static int RQ_BUFFER = 1024;
-	final private static int RP_BUFFER = 409600;
+	final private static int RP_BUFFER = 4096;
 	
 	private boolean debug;
 
@@ -93,6 +93,8 @@ public class NetThread extends Thread {
 	private void sendToServer(){
 		
 		String sResponse = null;
+		int respSize = 0;
+		byte[] tmpresponse = new byte[RP_BUFFER];
 		
 		try {
 			toServer.write(request, 0, reqBytes);
@@ -104,7 +106,7 @@ public class NetThread extends Thread {
 		
 		try {
 			while ((respBytes = fromServer.read(response)) != -1){
-				sResponse = new String(response, StandardCharsets.UTF_8);
+				sResponse = new String(tmpresponse, StandardCharsets.UTF_8);
 				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress()+" (size: "+respBytes+")");
 				if (debug) {
 					System.out.println("[+] ("+this.getName()+") RESPONSE:");

@@ -20,7 +20,7 @@ public class NetThread extends Thread {
 	
 
 	final private static int RQ_BUFFER = 1024;
-	final private static int RP_BUFFER = 409600;
+	final private static int RP_BUFFER = 40960;
 	
 	private boolean debug;
 
