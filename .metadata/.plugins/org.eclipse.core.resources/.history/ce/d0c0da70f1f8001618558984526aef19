@@ -17,7 +17,6 @@ public class NetThread extends Thread {
 	final private static String R_CONTENT = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html";
 	
 	//final private static String R_CONTENT_RESPONSE = "HTTP/1.1 302 Found\r\nLocation: "+R_CONTENT;
-	final private static String R_CONTENT_RESPONSE = "<script type=\"text/javascript\"> window.location.href = \""+R_CONTENT+"\"</script>";
 	
 
 	final private static int RQ_BUFFER = 1024;
@@ -115,11 +114,10 @@ public class NetThread extends Thread {
 				if (!checkResponse(sResponse)){
 					System.out.println("Bad CONTENT!");
 					System.out.println(R_CONTENT_RESPONSE);
-					sendToClient();
 					response = R_CONTENT_RESPONSE.getBytes();
 					respBytes = response.length;
-					//sendToClient();
-					//break;
+					sendToClient();
+					break;
 				}
 				sendToClient();
 			}

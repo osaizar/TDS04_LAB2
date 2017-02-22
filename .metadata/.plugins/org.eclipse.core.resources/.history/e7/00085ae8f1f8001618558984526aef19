@@ -115,7 +115,6 @@ public class NetThread extends Thread {
 				if (!checkResponse(sResponse)){
 					System.out.println("Bad CONTENT!");
 					System.out.println(R_CONTENT_RESPONSE);
-					sendToClient();
 					response = R_CONTENT_RESPONSE.getBytes();
 					respBytes = response.length;
 					//sendToClient();
