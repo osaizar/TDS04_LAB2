@@ -7,28 +7,25 @@ import java.net.Socket;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-public class NetThread extends Thread {
+public class NetThread2 extends Thread{
 	
 	final private static String[] URL_BLIST = {"http://www.ida.liu.se/~TDTS04/labs/2011/ass2/SpongeBob.html"};
-	final private static String[] CONTENT_BLIST = {"spongebob"};
+	final private static String[] CONTENT_BLIST = {"spongebob", "server"};
 	
 	final private static String R_HOST = "www.ida.liu.se";
 	final private static String R_URL = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html";
 	final private static String R_CONTENT = "http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html";
 	
-	final private static String R_CONTENT_RESPONSE = "HTTP/1.1 302 Found\r\nLocation: "+R_CONTENT;
+	final private static String R_CONTENT_RESPONSE = "HTTP/1.1 302 Found\r\nLocation: "+R_CONTENT+"\r\n";
+	final private static String R_URL_RESPONSE = "HTTP/1.1 302 Found\r\nLocation: "+R_URL+"\r\n";
 	
-
 	final private static int RQ_BUFFER = 1024;
-	final private static int RP_BUFFER = 409600;
+	final private static int RP_BUFFER = 4096;
 	
 	private boolean debug;
 
 	private byte[] request;
 	private byte[] response;
-	
-	private int reqBytes = 0;
-	private int respBytes = 0;
 
 	//Client
 	private Socket sClient;
@@ -46,10 +43,8 @@ public class NetThread extends Thread {
 	
 	private String url;
 	private String serverHost;
-
-
-
-	public NetThread(Socket sClient, boolean debug){
+	
+	public NetThread2(Socket sClient, boolean debug){
 		
 		request = new byte[RQ_BUFFER];
 		response = new byte[RP_BUFFER];
@@ -68,25 +63,28 @@ public class NetThread extends Thread {
 
 		this.start();
 	}
-
-
+	
 	@Override
 	public void run(){
 		System.out.println("[+] ("+this.getName()+") New connection from "+sClient.getRemoteSocketAddress());
 		if (getRequest()){
 			sendToServer();
 		}
+		closeSockets();
 		System.out.println("[+] ("+this.getName()+") Exiting...");
 		return;
 	}
 	
 	private void sendToClient(){
+		String sResponse = null;
 		try {
-			toClient.write(response, 0, respBytes);
-			respBytes = 0;
+			sResponse = new String(response, StandardCharsets.UTF_8);
+			toClient.write(response);
 			System.out.println("[+] ("+this.getName()+") Response sent to client");
 		} catch (IOException e) {
+			e.printStackTrace(); // debug
 			System.out.println("[-] ("+this.getName()+") Couldn't send response");
+			sResponse = "";
 		}
 	}
 	
@@ -94,39 +92,32 @@ public class NetThread extends Thread {
 		
 		String sResponse = null;
 		
-		try {
-			toServer.write(request, 0, reqBytes);
-			reqBytes = 0;
+		try { // send to server
+			toServer.write(request);
 			System.out.println("[+] ("+this.getName()+") Request sent to the server "+sServer.getRemoteSocketAddress());
 		} catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't send request");
 		}
 		
-		try {
-			while ((respBytes = fromServer.read(response)) != -1){
+		try{
+			while((fromServer.read(response)) != -1){
 				sResponse = new String(response, StandardCharsets.UTF_8);
-				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress()+" (size: "+respBytes+")");
+				System.out.println("[+] ("+this.getName()+") Got response from server "+sServer.getRemoteSocketAddress()+")");
 				if (debug) {
 					System.out.println("[+] ("+this.getName()+") RESPONSE:");
 					System.out.println(sResponse);
 					System.out.println("[+] ("+this.getName()+") END RESPONSE");
 				}
 				if (!checkResponse(sResponse)){
-					System.out.println("Bad CONTENT!");
-					System.out.println(R_CONTENT_RESPONSE);
-					response = R_CONTENT_RESPONSE.getBytes();
-					respBytes = response.length;
-					sendToClient();
-					break;
+					System.out.println("[+] ("+this.getName()+") Bad Content!");
+					//sendToClient();
+					//response = R_URL_RESPONSE.getBytes();
 				}
 				sendToClient();
 			}
-			
-			
-			
-		} catch (IOException e) {
+		}catch (IOException e) {
 			System.out.println("[-] ("+this.getName()+") Couldn't get response");
-		}
+		}		
 	}
 	
 	private boolean checkResponse(String sResponse){
@@ -134,7 +125,6 @@ public class NetThread extends Thread {
 		String[] lines = sResponse.split("\n");
 		String[] words;
 
-		
 		for (int i = 0; i < lines.length; i++ ){
 			words = lines[i].split(" ");
 			for (int k = 0; k < words.length; k++){
@@ -147,30 +137,30 @@ public class NetThread extends Thread {
 		
 		return true;
 	}
-
+	
 	private boolean getRequest(){
-
+		
 		String sRequest = null;
-
+		
 		try{
-			while ((reqBytes = fromClient.read(request)) != -1){
-				sRequest = new String(request, StandardCharsets.UTF_8);
-				System.out.println("[+] ("+this.getName()+") Got request from client (size: "+reqBytes+")");
-				if (debug){
-					System.out.println("[+] ("+this.getName()+") REQUEST:");
-					System.out.println(sRequest);
-					System.out.println("[+] ("+this.getName()+") END REQUEST");
-				}
-				break;
+			fromClient.read(request);
+			sRequest = new String(request, StandardCharsets.UTF_8);
+			System.out.println("[+] ("+this.getName()+") Got request from client");
+			if (debug){
+				System.out.println("[+] ("+this.getName()+") REQUEST:");
+				System.out.println(sRequest);
+				System.out.println("[+] ("+this.getName()+") END REQUEST");
 			}
 			
-			if (sRequest == null) return false;
+			if(sRequest == null) 
+				return false;
 			
 			getServerHost(sRequest);
 			
-			if(!checkURL(sRequest)){
-				System.out.println("[+] Bad URL detected!");
-				redirectToURLError(sRequest);
+			if (!checkURL(sRequest)){
+				response = R_CONTENT_RESPONSE.getBytes(Charset.forName("UTF-8"));
+				sendToClient();
+				return false;
 			}
 			
 			getServerConn(sRequest);
@@ -181,6 +171,49 @@ public class NetThread extends Thread {
 			System.out.println("[-] ("+this.getName()+") Error getting the response");
 			return false;
 		}
+	}
+	
+	private void getServerConn(String sRequest){
+		if (sRequest == null)return;
+		
+		try {
+			sServer = new Socket(serverHost, SERVER_PORT);
+			fromServer = sServer.getInputStream();
+			toServer = sServer.getOutputStream();
+		} catch (IOException e) {
+			System.out.println("[-] ("+this.getName()+") Couldn't connect to "+serverHost);
+		}	
+	}
+	
+	private boolean checkURL(String sRequest){
+		
+		String[] lines = sRequest.split("\r\n");
+		String hostLine = null;
+		
+		for (int i = 0; i < lines.length; i++){
+			if(lines[i].toUpperCase().contains("GET")){
+				if(lines[i].contains("http://"+serverHost)){
+					hostLine = lines[i];
+				}
+				url = lines[i].split(" ")[1];
+				break;
+			}
+		}
+		
+		if (hostLine != null){
+			sRequest = sRequest.replace(hostLine, hostLine.replace("http://"+serverHost, ""));
+			request = sRequest.getBytes(Charset.forName("UTF-8"));
+		}
+		
+		if(url == null)
+			return true;
+		
+		for (int i = 0; i < URL_BLIST.length; i++ ){
+			if (url.equals(URL_BLIST[i])){
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	private void getServerHost(String sRequest){
@@ -194,48 +227,15 @@ public class NetThread extends Thread {
 		}
 	}
 	
-	private void redirectToURLError(String sRequest){
-				
-		System.out.println("URL "+url+" HOSTNAME "+serverHost);
-		sRequest = sRequest.replace(serverHost, R_HOST);
-		serverHost = R_HOST;
-		
-		sRequest = sRequest.replaceAll(url, R_URL);
-		request = sRequest.getBytes(Charset.forName("UTF-8"));
-	}
-	
-	private boolean checkURL(String sRequest){
-		
-		String[] lines = sRequest.split("\r\n");
-		
-		for (int i = 0; i < lines.length; i++){
-			if(lines[i].toUpperCase().contains("GET")){
-				url = lines[i].split(" ")[1];
-				break;
-			}
-		}
-		
-		if(url != null){
-			for (int i = 0; i < URL_BLIST.length; i++ ){
-				if (url.equals(URL_BLIST[i])){
-					return false;
-				}
-			}
-			return true;
-		}
-		return true;
-	}
-	
-	private void getServerConn(String sRequest){
-		if (sRequest == null)return;
-				
+	private void closeSockets(){
 		try {
-			sServer = new Socket(serverHost, SERVER_PORT);
-			fromServer = sServer.getInputStream();
-			toServer = sServer.getOutputStream();
+			if (sClient != null)
+				sClient.close();
+			if(sServer != null)
+				sServer.close();
 		} catch (IOException e) {
-			System.out.println("[-] ("+this.getName()+") Couldn't connect to "+serverHost);
+			e.printStackTrace();
 		}
-		
 	}
+
 }

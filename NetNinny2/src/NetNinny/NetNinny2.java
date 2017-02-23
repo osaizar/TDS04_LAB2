@@ -20,7 +20,7 @@ public class NetNinny2{
 			addr = InetAddress.getByName(ip);
 			server = new ServerSocket(port, 50, addr);
 			while (true){
-				new NetThread(server.accept(), debug);
+				new NetThread2(server.accept(), debug);
 			}
 
 		} catch (IOException e) {
