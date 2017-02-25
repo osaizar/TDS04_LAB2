@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 
-public class NetNinny2{
+public class NetNinny{
 
 	final private static int PORT = 8080; //default port, you can change it with args
 
-	public NetNinny2(int port, String ip, boolean debug){
+	public NetNinny(int port, String ip, boolean debug){
 
 		ServerSocket server;
 		InetAddress addr;
@@ -19,7 +19,7 @@ public class NetNinny2{
 		try {
 			addr = InetAddress.getByName(ip);
 			server = new ServerSocket(port, 50, addr);
-			while (true){
+			while (true){ //for each new connection, we create a new socket
 				new NetThread(server.accept(), debug);
 			}
 
@@ -35,18 +35,18 @@ public class NetNinny2{
 		String ip = "127.0.0.1";
 
 		for (int i = 0; i < args.length; i++){
-			if(args[i].equals("-p")){ //custom port
+			if(args[i].equals("-p")){ // listen to custom port
 				port = Integer.parseInt(args[i+1]);
 				i++;
-			}else if(args[i].equals("-d")){ //debug
+			}else if(args[i].equals("-d")){ // debug mode on/off
 				debug = true;
-			}else if(args[i].equals("-i")){ //ip
+			}else if(args[i].equals("-i")){ // listen to custom IP address
 				ip = args[i+1];
 				i++;
 			}
 		}
 
-		new NetNinny2(port, ip, debug);
+		new NetNinny(port, ip, debug);
 	}
 
 }
