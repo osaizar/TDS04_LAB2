@@ -50,8 +50,8 @@ public class NetThread extends Thread{
 
 //Constructor: Get Client input and output streams and initialize buffers
 	public NetThread(Socket sClient, boolean debug){
-		request = new byte[RQ_BUFFER];
-		response = new byte[RP_BUFFER];
+		//request = new byte[RQ_BUFFER];
+		//response = new byte[RP_BUFFER];
 
 		this.sClient = sClient;
 		this.debug = debug;
