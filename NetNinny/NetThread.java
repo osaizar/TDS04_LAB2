@@ -48,10 +48,10 @@ public class NetThread extends Thread{
 
 	private boolean checkContent = true;
 
-//Constructor: Get Client input and output streams and initialize buffers
+	// Constructor: Get Client input and output streams and initialize buffers
 	public NetThread(Socket sClient, boolean debug){
-		//request = new byte[RQ_BUFFER];
-		//response = new byte[RP_BUFFER];
+		request = new byte[RQ_BUFFER];
+		response = new byte[RP_BUFFER];
 
 		this.sClient = sClient;
 		this.debug = debug;
@@ -68,7 +68,7 @@ public class NetThread extends Thread{
 		this.start();
 	}
 
-// Main function of the thread, get request and if correct send it to the server
+	// Main function of the thread, get request and if correct send it to the server
 	@Override
 	public void run(){
 		System.out.println("[+] ("+this.getName()+") New connection from "+sClient.getRemoteSocketAddress());
@@ -80,7 +80,7 @@ public class NetThread extends Thread{
 		return;
 	}
 
-// Send response to the client
+	// Send response to the client
 	private void sendToClient(){
 		try {
 			toClient.write(response, 0, respSize);
@@ -91,7 +91,7 @@ public class NetThread extends Thread{
 		}
 	}
 
-// Send request to the server, get response and send it to the client
+	// Send request to the server, get response and send it to the client
 	private void sendToServer(){
 
 		String sResponse = null;
@@ -128,6 +128,7 @@ public class NetThread extends Thread{
 		}
 	}
 
+// Checks if the response is text and is readable
 private boolean isResponseCheckeable(String sResponse){
 
 	String[] lines = sResponse.split("\n");
@@ -150,7 +151,7 @@ private boolean isResponseCheckeable(String sResponse){
 	return true;
 }
 
-// Check if the response has bad content
+	// Check if the response has bad content
 	private boolean checkResponse(String sResponse){
 
 		String[] lines = sResponse.split("\n");
@@ -169,7 +170,7 @@ private boolean isResponseCheckeable(String sResponse){
 		return true;
 	}
 
-// Get request from client
+	// Get request from client
 	private boolean getRequest(){
 
 		String sRequest = null;
@@ -207,7 +208,7 @@ private boolean isResponseCheckeable(String sResponse){
 		}
 	}
 
-// Get the connection with the server and create the streams
+	// Get the connection with the server and create the streams
 	private void getServerConn(){
 
 		try {
@@ -219,7 +220,7 @@ private boolean isResponseCheckeable(String sResponse){
 		}
 	}
 
-// Check if the request is directed to a bad URL
+	// Check if the request is directed to a bad URL
 	private boolean checkURL(String sRequest){
 
 		String[] lines = sRequest.split("\r\n");
@@ -251,7 +252,7 @@ private boolean isResponseCheckeable(String sResponse){
 		return true;
 	}
 
-// Get hostname of the server
+	// Get hostname of the server
 	private void getServerHost(String sRequest){
 		String split[] = sRequest.split("\r\n");
 
@@ -263,7 +264,7 @@ private boolean isResponseCheckeable(String sResponse){
 		}
 	}
 
-// Close the used sockets
+	// Close the used sockets
 	private void closeSockets(){
 		try {
 			if (sClient != null)
@@ -274,5 +275,4 @@ private boolean isResponseCheckeable(String sResponse){
 			e.printStackTrace();
 		}
 	}
-
 }
